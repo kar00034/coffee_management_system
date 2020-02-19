@@ -56,9 +56,7 @@ class Main(QtWidgets.QMainWindow):
         #     value_list.append(int(self.sdt.select_graph_product('아메리카노')[1][self.sdt.select_graph_product('아메리카노')[0][i]]))
         #
         # self.graphWidget.plot(key_list, value_list, pen=color, name='아메리카노')
-        print('ca')
         self.graph_sale('카푸치노')
-        print('am')
         self.graph_sale('아메리카노')
         #table
         self.table_pro = create_table(table=self.ui.table_pro, data=['제품코드', '제품명', '종류', '제품가격', '마진율(%)'])
@@ -75,7 +73,6 @@ class Main(QtWidgets.QMainWindow):
         self.ui.combo_menu.currentIndexChanged.connect(self.select_menu)
         self.ui.combo_sale_year.currentIndexChanged.connect(self.select_sale)
         self.ui.combo_sale_month.currentIndexChanged.connect(self.select_month)
-        self.ui.combo_year.currentIndexChanged.connect(self.select_sale_graph)
         self.ui.show()
 
     # button ui
@@ -103,7 +100,6 @@ class Main(QtWidgets.QMainWindow):
     def combobox_setting(self):
         self.ui.combo_menu.addItem('all')
         self.ui.combo_sale_year.addItem('all')
-        self.ui.combo_year.addItem('all')
         self.ui.combo_month.addItem('all')
         self.ui.combo_sale_month.addItem('년도를 선택해주세요')
 
@@ -112,8 +108,6 @@ class Main(QtWidgets.QMainWindow):
         for i in range(len(self.sdt.select_item(True))):
             self.ui.combo_sale_year.addItems(tuple(self.sdt.select_item(True)[i]))
 
-        for i in range(len(self.sdt.select_item(True))):
-            self.ui.combo_year.addItems(tuple(self.sdt.select_item(True)[i]))
         for i in range(len(self.sdt.select_graph())):
             self.ui.combo_month.addItems(self.sdt.select_graph(True)[i])
 
@@ -257,27 +251,11 @@ class Main(QtWidgets.QMainWindow):
         self.set.ui.lbl_mode.setText(self.idt.select_item_id(self.ui.lbl_ID.text())[0][1])
 
     #graph
-    def select_sale_graph(self):
-        if self.ui.combo_year.currentText() == 'all':# 월 별로 표시
-            for i in range(0, self.month_count):
-                self.ui.combo_month.removeItem(0)
-            self.ui.combo_month.addItem('all')
-            for i in range(len(self.sdt.select_graph(True))):
-                self.ui.combo_month.addItems(tuple(self.sdt.select_graph()[i]))
-
-        else: # 년 월별로 표시
-            for i in range(0, self.month_count):
-                self.ui.combo_month.removeItem(0)
-            self.ui.combo_month.addItem('all')
-            for i in range(len(self.sdt.select_graph_where(data=self.ui.combo_year.currentText(), count=True))+1):
-                self.ui.combo_month.addItems(tuple(self.sdt.select_graph_where(data=self.ui.combo_year.currentText(),count=False)[i]))
 
     def graph_sale(self,name):
         self.graphWidget.setBackground('w')
         self.graphWidget.setLabel('left', '판매량', color='black', size=30)
         self.graphWidget.setLabel('bottom', '월', color='black', size=30)
-        red = pg.mkPen(color=(255, 0, 0))
-        black = pg.mkPen(color=(0, 0, 0))
         color = pg.mkPen(randint(0, 255), randint(0, 255), randint(0, 255))
         key_list = []
         value_list = []
@@ -287,3 +265,12 @@ class Main(QtWidgets.QMainWindow):
             value_list.append(int(self.sdt.select_graph_product(name)[1][self.sdt.select_graph_product(name)[0][i]]))
 
         self.graphWidget.plot(key_list, value_list, pen=color, name=name)
+
+
+
+"""
+select p.name, if(count(select salecnt from sale where DATE_FORMAT(date,'%Y %m') = '2020 02')=0,0,salecnt) from product p left join sale s on p.code = s.code GROUP by p.name;
+select name from product p join sale s on p.code=s.code where p.name = '팥빙수' and DATE_FORMAT(date,'%Y %m') = '2020 02' GROUP by name;
+select if(count(select salecnt from sale where DATE_FORMAT(date,'%Y %m') = '2020 02')=0,0,salecnt) from product p left join sale s on p.code = s.code GROUP by p.name;
+select salecnt from sale where DATE_FORMAT(date,'%Y %m') = '2020 02';
+"""

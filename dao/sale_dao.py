@@ -6,8 +6,8 @@ insert_sql = "INSERT INTO sale VALUES(NULL, (select code from product where name
 update_sql = "update sale set code=%s, salecnt=%s where no=%s"
 delete_sql = "delete from sale where no = %s"
 select_sql = "select name,salecnt,sale_price, DATE_FORMAT(date,'%Y-%m-%d %H:%i') from sale s left join sale_detail sd on s.no = sd.no left join product p on s.code = p.code where salecnt != 0"
-select_sql_where_year = select_sql + " where DATE_FORMAT(date,'%Y') = %s"
-select_sql_where_month = select_sql + " where DATE_FORMAT(date,'%Y %m') = %s"
+select_sql_where_year = select_sql + " and DATE_FORMAT(date,'%Y') = %s"
+select_sql_where_month = select_sql + " and DATE_FORMAT(date,'%Y %m') = %s"
 
 select_sql2 = "select distinct(DATE_FORMAT(date,'%Y')) from sale s left join product p on s.code = p.code left join sale_detail sd on s.no = sd.no"
 select_sql2_where = select_sql2 + " where DATE_FORMAT(date,'%Y') = %s"
