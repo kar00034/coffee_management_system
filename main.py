@@ -31,3 +31,11 @@ select salecnt from sale where DATE_FORMAT(date,'%Y %m') = '2020 02';
 
 lib = qt, pyqt5
 """
+
+"""
+insert into sale VALUES
+(1,'A001',150,default),
+(2,'A002',140,default),
+(3,'B001',250,default),
+(4,'B002',110,default);
+"""
