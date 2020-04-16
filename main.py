@@ -33,6 +33,13 @@ lib = qt, pyqt5
 """
 
 """
+select * from sale s left join product p on s.code = p.code where name = '아메리카노'; and DATE_FORMAT(date,'&Y') = '2020';
+select name,salecnt,if(salecnt != 0,'참','거짓') from product p left join sale s on p.code = s.code;
+select name,salecnt from product p left join sale s on p.code = s.code where DATE_FORMAT(date,'%Y %m') = '2020 04' group by p.code;
+select count(salecnt) from sale where DATE_FORMAT(date,'%Y %m') = '2020 02';
+"""
+
+"""
 insert into sale VALUES
 (1,'A001',150,default),
 (2,'A002',140,default),
