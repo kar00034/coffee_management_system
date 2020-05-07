@@ -19,12 +19,8 @@ class management_system(QWidget):
 
         self.ui.btn_edit_user.setEnabled(False)
 
-        # self.ui.lbl_ID.setText('a')
-        # self.ui.lbl_mode.setText(self.idt.select_item(self.ui.lbl_ID.text())[0][1])
-
-        self.table_user = create_table(table=self.ui.table_user, data=['ID','이름','권한','이메일'])
+        self.table_user = create_table(table=self.ui.table_user, data=['ID', '이름', '권한', '이메일'])
         self.load_user()
-        # self.check_grant()
 
         self.ui.le_pass.setEchoMode(QLineEdit.Password)
 
@@ -66,7 +62,6 @@ class management_system(QWidget):
 
     def coffee_init(self):
         db = DbInit()
-        # db.service()
         if db.service() == 0:
             self.msgbox1()
         else:
@@ -76,36 +71,40 @@ class management_system(QWidget):
         br = BackupRestore()
         now_date = time.strftime('%Y-%m-%d', time.localtime(time.time()))
         mkdir_backup = '/tmp/backup/' + now_date
+
+        try:
+            os.system('mkdir /tmp/backup')
+        except:
+            pass
         os.system('mkdir ' + mkdir_backup)
-        os.system('chmod 777 '+mkdir_backup)
+        os.system('chmod 777 ' + mkdir_backup)
         tablename = ['product', 'sale', 'sale_detail', 'mode_grant', 'category', 'user_data', 'user_mode']
+
+
         try:
             for i in range(len(tablename)):
                 br.data_backup(table_name=tablename[i])
         except:
             pass
 
-
     def Restore(self):
         br = BackupRestore()
-        # br.delete_all_table()
-        tablename = ['product','sale','sale_detail','mode_grant','category','user_data','user_mode']
+        tablename = ['product', 'sale', 'sale_detail', 'mode_grant', 'category', 'user_data', 'user_mode']
         for i in range(len(tablename)):
             br.data_restore(table_name=tablename[i])
 
     def check_grant(self):
         grant = []
         for i in range(len(IDDao().select_grant('admin'))):
-            a = IDDao().select_grant(self.ui.lbl_ID.text()).count(IDDao().select_grant('admin')[i])
+            a = IDDao().select_grant(self.ui.lbl_mode.text()).count(IDDao().select_grant('admin')[i])
             grant.append(a)
-        # [view, sale, manage_pro, manage_user, system]
 
         if grant[4] == 0:
             self.ui.tab_manage.removeTab(1)
         if grant[3] == 0:
             self.ui.tab_manage.removeTab(0)
 
-    #table
+    # table
     def load_user(self):
         self.ui.table_user.setRowCount(0)
         res = self.idt.select_item_mode()
@@ -117,7 +116,6 @@ class management_system(QWidget):
             self.ui.table_user.setItem(nextIdx, 1, item_name)
             self.ui.table_user.setItem(nextIdx, 2, item_mode)
             self.ui.table_user.setItem(nextIdx, 3, item_email)
-
 
     def user_create_item(self, ID, name, mode, email):
         item_code = QTableWidgetItem()
@@ -136,12 +134,12 @@ class management_system(QWidget):
         item_email.setTextAlignment(Qt.AlignCenter)
         item_email.setData(Qt.DisplayRole, email)
 
-        return item_code,item_name,item_mode,item_email
+        return item_code, item_name, item_mode, item_email
 
-    #user_manage
+    # user_manage
     def del_user(self):
         selectionIdxs = self.ui.table_user.selectedIndexes()[0]
-        user_id = self.ui.table_user.item(selectionIdxs.row(),0).text()
+        user_id = self.ui.table_user.item(selectionIdxs.row(), 0).text()
 
         self.ui.table_user.removeRow(selectionIdxs.row())
         self.idt.delete_item(user_id)
@@ -167,8 +165,8 @@ class management_system(QWidget):
             QMessageBox.information(self, '사용자 관리', '이메일을 입력해주세요.', QMessageBox.Ok)
             count = 1
 
-        if count ==0:
-            self.idt.insert_item(item_id,item_pass,item_mode,item_name,item_email)
+        if count == 0:
+            self.idt.insert_item(item_id, item_pass, item_mode, item_name, item_email)
             self.load_user()
 
     def edit_user(self):
@@ -180,7 +178,7 @@ class management_system(QWidget):
         if mode == '--select--':
             QMessageBox.information(self, '사용자 관리', '유저 권한을 설정해 주세요.', QMessageBox.Ok)
         else:
-            item_id, item_name ,item_mode, item_email = self.user_create_item(id,name,mode,email)
+            item_id, item_name, item_mode, item_email = self.user_create_item(id, name, mode, email)
 
             selectionIdxs = self.ui.table_user.selectedIndexes()[0]
 
@@ -196,7 +194,7 @@ class management_system(QWidget):
             self.ui.le_pass.setEnabled(True)
             self.clear()
 
-            self.idt.update_item(id,mode,name,email)
+            self.idt.update_item(id, mode, name, email)
             QMessageBox.information(self, '사용자 관리', '확인', QMessageBox.Ok)
 
     def clear(self):

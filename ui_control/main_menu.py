@@ -1,17 +1,12 @@
-# from PyQt5 import uic
-# from matplotlib.backends.backend_template import FigureCanvas
-# from matplotlib.figure import Figure
-# import matplotlib.pyplot as plt
-# import numpy as np
-from random import random, randint
+import math
 
-from PyQt5 import uic
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTableWidgetItem
-from PyQt5 import QtWidgets, uic
-import pyqtgraph as pg
-from pyqtgraph import PlotWidget, plot
-from PyQt5.QtWidgets import QApplication
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from dao.id_dao import IDDao
 from dao.product_dao import ProductDao
@@ -28,44 +23,25 @@ class Main(QtWidgets.QMainWindow):
         self.pdt = ProductDao()
         self.idt = IDDao()
         self.sdt = SaleDao()
-        # self.ui = uic.loadUi("ui/main_menu.ui",self)
-        self.ui = uic.loadUi("ui/test.ui",self)
+        self.ui = uic.loadUi("ui/main_menu.ui", self)
 
-        self.month_count = 13
-        self.count = 1
+        self.month_count = 14
+        self.graphcount = 0
 
         # combobox
         self.combobox_setting()
 
         # graph
-        self.graphWidget.addLegend()
-        # self.graphWidget.setBackground('w')
-        # self.graphWidget.setLabel('left', '판매량', color='black', size=30)
-        # self.graphWidget.setLabel('bottom', '월', color='black', size=30)
-        # self.graphWidget.addLegend()
-        # red = pg.mkPen(color=(255, 0, 0))
-        # black = pg.mkPen(color=(0, 0, 0))
-        # color = pg.mkPen(randint(0,255),randint(0,255),randint(0,255))
-        # key_list = []
-        # value_list = []
-        #
-        # for i in range(len(self.sdt.select_graph_product('아메리카노')[0])):
-        #     key_list.append(float(self.sdt.select_graph_product('아메리카노')[0][i]))
-        #
-        # for i in range(len(self.sdt.select_graph_product('아메리카노')[0])):
-        #     value_list.append(int(self.sdt.select_graph_product('아메리카노')[1][self.sdt.select_graph_product('아메리카노')[0][i]]))
-        #
-        # self.graphWidget.plot(key_list, value_list, pen=color, name='아메리카노')
-        self.graph_sale('카푸치노')
-        self.graph_sale('아메리카노')
-        #table
+        self.graph()
+
+        # table
         self.table_pro = create_table(table=self.ui.table_pro, data=['제품코드', '제품명', '종류', '제품가격', '마진율(%)'])
         self.sale_pro = create_table(table=self.ui.table_sale, data=['제품명', '판매량', '판매금액', '판매일'])
 
         self.load_pro_all()
         self.load_sale_all()
 
-        self.ui.btn_out.clicked.connect(self.exit) #logout
+        self.ui.btn_out.clicked.connect(self.exit)  # logout
         self.ui.btn_manage.clicked.connect(self.manage)
         self.ui.btn_sale.clicked.connect(self.sale_manage)
         self.ui.btn_exit.clicked.connect(self.exit)
@@ -86,10 +62,14 @@ class Main(QtWidgets.QMainWindow):
         self.sale = SaleMenu()
         grant = []
         for i in range(len(IDDao().select_grant('admin'))):
-            a = IDDao().select_grant(self.ui.lbl_ID.text()).count(IDDao().select_grant('admin')[i])
+            a = IDDao().select_grant(self.ui.lbl_mode.text()).count(IDDao().select_grant('admin')[i])
             grant.append(a)
-        if grant[2]==0:
+        if grant[2] == 0:
             self.sale.ui.tab_product.removeTab(0)
+            self.sale.ui.btn_insert.setEnabled(False)
+            self.sale.ui.btn_delete.setEnabled(False)
+            self.sale.ui.btn_ok.setEnabled(False)
+            self.sale.ui.btn_reset.setEnabled(False)
 
     def logout(self):
         self.ui.close()
@@ -100,16 +80,12 @@ class Main(QtWidgets.QMainWindow):
     def combobox_setting(self):
         self.ui.combo_menu.addItem('all')
         self.ui.combo_sale_year.addItem('all')
-        self.ui.combo_month.addItem('all')
         self.ui.combo_sale_month.addItem('년도를 선택해주세요')
 
         for i in range(len(self.pdt.select_category())):
             self.ui.combo_menu.addItems(self.pdt.select_category()[i])
         for i in range(len(self.sdt.select_item(True))):
             self.ui.combo_sale_year.addItems(tuple(self.sdt.select_item(True)[i]))
-
-        for i in range(len(self.sdt.select_graph())):
-            self.ui.combo_month.addItems(self.sdt.select_graph(True)[i])
 
     # product table
     def select_menu(self):
@@ -122,7 +98,9 @@ class Main(QtWidgets.QMainWindow):
     def load_pro(self, res):
         self.ui.table_pro.setRowCount(0)
         for (code, name, price, marginrate, category) in res:
-            item_code, item_name, item_price, item_marginrate, item_category = self.pro_create_item(code, name, price, marginrate, category)
+            item_code, item_name, item_price, item_marginrate, item_category = self.pro_create_item(code, name, price,
+                                                                                                    marginrate,
+                                                                                                    category)
             nextIdx = self.ui.table_pro.rowCount()
             self.ui.table_pro.insertRow(nextIdx)
             self.ui.table_pro.setItem(nextIdx, 0, item_code)
@@ -164,7 +142,9 @@ class Main(QtWidgets.QMainWindow):
         self.ui.table_pro.setRowCount(0)
         res = self.pdt.select_menu2()
         for (code, name, price, marginrate, category) in res:
-            item_code, item_name, item_price, item_marginrate, item_category = self.pro_create_item(code, name, price, marginrate, category)
+            item_code, item_name, item_price, item_marginrate, item_category = self.pro_create_item(code, name, price,
+                                                                                                    marginrate,
+                                                                                                    category)
             nextIdx = self.ui.table_pro.rowCount()
             self.ui.table_pro.insertRow(nextIdx)
             self.ui.table_pro.setItem(nextIdx, 0, item_code)
@@ -196,7 +176,6 @@ class Main(QtWidgets.QMainWindow):
     def load_sale_all(self):
         self.ui.table_sale.setRowCount(0)
         res = self.sdt.select_item()
-        # print(res)
         for (name, salecnt, sale_price, date) in res:
             item_name, item_salecnt, item_sale_price, item_date = self.sale_create_item(name, salecnt, sale_price, date)
             nextIdx = self.ui.table_sale.rowCount()
@@ -208,20 +187,19 @@ class Main(QtWidgets.QMainWindow):
 
     def select_sale(self):
         if self.ui.combo_sale_year.currentText() == 'all':
-            for i in range(0, self.count):
+            for i in range(0, self.month_count):
                 self.ui.combo_sale_month.removeItem(0)
             self.ui.combo_sale_month.addItem('년도를 선택해주세요')
             self.load_sale_all()
-            self.count = 1
         else:
             res = list(self.sdt.select_date(self.ui.combo_sale_year.currentText()))
 
-            self.ui.combo_sale_month.removeItem(0)
+            for i in range(0, self.month_count):
+                self.ui.combo_sale_month.removeItem(0)
             self.ui.combo_sale_month.addItem('all')
             self.load_sale(res)
             for i in range(len(self.sdt.select_date(self.ui.combo_sale_year.currentText(), 2))):
                 self.ui.combo_sale_month.addItems(self.sdt.select_date(self.ui.combo_sale_year.currentText(), 2)[i])
-                self.count = self.count + 1
 
     def load_sale(self, res):
         self.ui.table_sale.setRowCount(0)
@@ -250,29 +228,26 @@ class Main(QtWidgets.QMainWindow):
         self.set.ui.lbl_name.setText(self.idt.select_item_id(self.ui.lbl_ID.text())[0][0])
         self.set.ui.lbl_mode.setText(self.idt.select_item_id(self.ui.lbl_ID.text())[0][1])
 
-    #graph
+    # graph
+    def graph(self):
+        # 글꼴
+        mpl.rcParams['font.family'] = 'NanumGothic'
+        mpl.rcParams['axes.unicode_minus'] = False
+        # data
+        name, price = self.sdt.select_graph_product()
+        fig, ax1 = plt.subplots()
 
-    def graph_sale(self,name):
-        self.graphWidget.setBackground('w')
-        self.graphWidget.setLabel('left', '판매량', color='black', size=30)
-        self.graphWidget.setLabel('bottom', '월', color='black', size=30)
-        color = pg.mkPen(randint(0, 255), randint(0, 255), randint(0, 255))
-        key_list = []
-        value_list = []
-
-        for i in range(len(self.sdt.select_graph_product(name)[0])):
-            key_list.append(float(self.sdt.select_graph_product(name)[0][i]))
-            value_list.append(int(self.sdt.select_graph_product(name)[1][self.sdt.select_graph_product(name)[0][i]]))
-
-        self.graphWidget.plot(key_list, value_list, pen=color, name=name)
+        # plot
+        self.plotWidget = FigureCanvas(fig)
 
 
+        ax1.set_title("커피 판매량")
+        self.lay = QtWidgets.QVBoxLayout(self.ui.content_plot)
+        self.lay.addWidget(self.plotWidget)
 
-"""
-select p.name, if(count(select salecnt from sale where DATE_FORMAT(date,'%Y %m') = '2020 02')=0,0,salecnt) from product p left join sale s on p.code = s.code GROUP by p.name;
-select name from product p join sale s on p.code=s.code where p.name = '팥빙수' and DATE_FORMAT(date,'%Y %m') = '2020 02' GROUP by name;
-select if(count(select salecnt from sale where DATE_FORMAT(date,'%Y %m') = '2020 02')=0,0,salecnt) from product p left join sale s on p.code = s.code GROUP by p.name;
-select salecnt from sale where DATE_FORMAT(date,'%Y %m') = '2020 02';
+        ax1.pie(price, labels=name, autopct=lambda pct: self.func(pct, price), shadow=False,
+                     startangle=90, radius=1.0)
 
-lib = qt, pyqt5
-"""
+    def func(self, pct, data):
+        absolute = round(int(pct * float(math.ceil(np.sum(data)))) / 100)
+        return "{:.1f}%\n({:,d})".format(pct, absolute)

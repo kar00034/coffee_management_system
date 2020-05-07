@@ -89,7 +89,7 @@ class IDDao(Dao):
             conn.close()
 
     def select_grant(self,id):
-        select_grant = "SELECT user_grant from mode_grant g left join user_data u on g.name = u.mode where u.name = %s"
+        select_grant = "SELECT user_grant from mode_grant g left join user_data u on g.name = u.mode where u.mode = %s"
         try:
             conn = self.connection_Pool.get_connection()
             cursor = conn.cursor()
@@ -167,7 +167,7 @@ class IDDao(Dao):
 
     def select_item_id(self, user_id=None):
         select_sql = "select name,mode from user_data"
-        select_sql_where = select_sql + " where user_id = %s"
+        select_sql_where = select_sql + " where name = %s"
         try:
             conn = self.connection_Pool.get_connection()
             cursor = conn.cursor()

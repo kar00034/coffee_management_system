@@ -17,10 +17,12 @@ class SaleMenu(QWidget):
         self.ui = uic.loadUi("ui/sale_manage.ui")
         self.pdt = ProductDao()
         self.sdt = SaleDao()
-        self.ui.table_sale.setColumnCount(5)
+        self.ui.table_sale.setColumnCount(7)
         self.ui.table_order.setColumnCount(3)
         self.table_order = create_table(table=self.ui.table_order, data=['제품명', '종류', '갯수'])
-        self.table_sale = create_table(table=self.ui.table_sale, data=['제품코드', '제품명','종류', '제품가격', '마진율(%)'])
+        self.table_sale_detail = create_table(table=self.ui.table_sale, data=['제품명', '종류', '판매량', '판매액', '세금', '마진액', '판매 시간'])
+        self.load_sale()
+
         self.ui.combo_menu.addItem('all')
         self.ui.combo_sel_pro.addItem('--select--')
         self.count = 0
@@ -44,8 +46,6 @@ class SaleMenu(QWidget):
         self.ui.combo_menu.currentIndexChanged.connect(self.select_menu)
         self.ui.btn_exit.clicked.connect(self.exit)
 
-        self.load_pro_all()
-
         # sale_manage
         self.ui.tab_product.currentChanged.connect(self.tab_change)
         self.ui.btn_insert.clicked.connect(self.ins_order)
@@ -65,7 +65,7 @@ class SaleMenu(QWidget):
         self.ui.btn_edit_menu.setEnabled(False)
         self.ui.btn_edit.setEnabled(False)
         self.ui.btn_edit_menu.setText('편집시 우클릭')
-        self.ui.btn_edit.setText('편집시 우클릭')
+        self.ui.btn_edit.setText('편집시 주문 현황 우클릭')
 
         self.ui.show()
 
@@ -138,7 +138,6 @@ class SaleMenu(QWidget):
         else:
             item_code, item_name, item_price, item_margin = self.pro_create_item(code, name, price, margin)
 
-            # selectionIdxs = self.ui.table_sale.selectedIndexes()[0]
             countIdxs = self.ui.table_sale.rowCount()
 
             self.ui.table_sale.setItem(countIdxs, 0, item_code)
@@ -169,7 +168,6 @@ class SaleMenu(QWidget):
                 self.load_pro(res)
 
     def load_pro(self,res):
-        # res = self.pdt.select_menu2()
         self.ui.table_sale.setRowCount(0)
         for (code, name, category, price, marginrate) in res:
             item_code, item_name, item_category, item_price, item_marginrate = self.pro_create_item(code, name, category, price, marginrate, )
@@ -236,45 +234,33 @@ class SaleMenu(QWidget):
         tv.addAction(update_action)
         update_action.triggered.connect(self.update)
 
+
     def update(self):
         selectionIdxs = self.ui.table_sale.selectedIndexes()[0]
-        if self.ui.tab_product.currentIndex() == 0:
-            QMessageBox.information(self, '제품 관리', '제품의 종류 설정해 주세요.', QMessageBox.Ok)
-            returnIdxs1 = self.ui.table_sale.item(selectionIdxs.row(), 0).text()
-            returnIdxs2 = self.ui.table_sale.item(selectionIdxs.row(), 1).text()
-            if self.ui.table_sale.item(selectionIdxs.row(), 3).text().count(',') >= 1:
-                returnIdxs3 = self.ui.table_sale.item(selectionIdxs.row(), 3).text().split(',')[0] + self.ui.table_sale.item(selectionIdxs.row(), 3).text().split(',')[1]
-            else:
-                returnIdxs3 = self.ui.table_sale.item(selectionIdxs.row(), 3).text()
-            returnIdxs4 = self.ui.table_sale.item(selectionIdxs.row(), 3).text()
+        QMessageBox.information(self, '제품 관리', '제품의 종류 설정해 주세요.', QMessageBox.Ok)
+        returnIdxs1 = self.ui.table_sale.item(selectionIdxs.row(), 0).text()
+        returnIdxs2 = self.ui.table_sale.item(selectionIdxs.row(), 1).text()
+        if self.ui.table_sale.item(selectionIdxs.row(), 3).text().count(',') >= 1:
+            returnIdxs3 = self.ui.table_sale.item(selectionIdxs.row(), 3).text().split(',')[0] + self.ui.table_sale.item(selectionIdxs.row(), 3).text().split(',')[1]
+        else:
+            returnIdxs3 = self.ui.table_sale.item(selectionIdxs.row(), 3).text()
+        returnIdxs4 = self.ui.table_sale.item(selectionIdxs.row(), 3).text()
 
-            self.ui.le_pro_code.setText(returnIdxs1)
-            self.ui.le_pro_name.setText(returnIdxs2)
-            self.ui.le_pro_price.setText(returnIdxs3)
-            self.ui.le_pro_margin.setText(returnIdxs4)
+        self.ui.le_pro_code.setText(returnIdxs1)
+        self.ui.le_pro_name.setText(returnIdxs2)
+        self.ui.le_pro_price.setText(returnIdxs3)
+        self.ui.le_pro_margin.setText(returnIdxs4)
 
-            self.ui.btn_insert.setEnabled(False)
-            self.ui.btn_del_menu.setEnabled(False)
-            self.ui.btn_insert_menu.setEnabled(False)
-            self.ui.btn_edit_menu.setEnabled(True)
-            self.ui.btn_edit_menu.setText('편집')
-            self.ui.le_pro_code.setEnabled(False)
-            self.ui.btn_ins_category.setEnabled(False)
-
-        # if self.ui.tab_product.currentIndex() == 1:
-        #     returnIdxs = self.ui.table_sale.item(selectionIdxs.row(), 2).text()
-        #
-        #     self.ui.le_salecnt.setText(returnIdxs)
-        #
-        #     self.ui.btn_ok.setEnabled(False)
-        #     self.ui.btn_reset.setEnabled(False)
-        #     self.ui.btn_delete.setEnabled(False)
-        #     self.ui.btn_exit.setEnabled(False)
-        #     self.ui.btn_edit.setEnabled(True)
+        self.ui.btn_insert.setEnabled(False)
+        self.ui.btn_del_menu.setEnabled(False)
+        self.ui.btn_insert_menu.setEnabled(False)
+        self.ui.btn_edit_menu.setEnabled(True)
+        self.ui.btn_edit_menu.setText('편집')
+        self.ui.le_pro_code.setEnabled(False)
+        self.ui.btn_ins_category.setEnabled(False)
 
     def category(self):
         self.ca = Category()
-        # self.ca.ui.btn_out.clicked.connect(self.select_menu)
 
         self.ca.ui.btn_ins_category.clicked.connect(self.init_category)
         self.ca.ui.btn_del_category.clicked.connect(self.init_category2)
@@ -316,6 +302,7 @@ class SaleMenu(QWidget):
             self.ui.lb_order.show()
             self.load_sale()
 
+
         elif self.ui.tab_product.currentIndex() == 2:
             self.ui.table_sale.setColumnCount(4)
             self.table_select = create_table(table=self.ui.table_sale, data=['제품명', '판매량', '판매가', '판매시간'])
@@ -336,7 +323,7 @@ class SaleMenu(QWidget):
         category = self.pdt.select_order_name_category(name)
         category = str(category).strip(("[('")).strip("',)]")
         cnt = self.ui.le_salecnt.text()
-        # if name in self.order_list.keys:
+
         if name in self.order_list.keys():
             self.order_list[name] = int(self.order_list[name])+int(cnt)
         else:
@@ -390,7 +377,6 @@ class SaleMenu(QWidget):
             self.ui.btn_edit.setEnabled(False)
 
             selectionIdxs = self.ui.table_order.selectedIndexes()[0]
-            # self.ui.tab_sale.currentIndex()
             cnt = self.ui.le_salecnt.text()
 
             item_cnt = QTableWidgetItem()
@@ -424,6 +410,7 @@ class SaleMenu(QWidget):
             self.ui.table_sale.setItem(nextIdx, 4, item_tax)
             self.ui.table_sale.setItem(nextIdx, 5, item_margin_price)
             self.ui.table_sale.setItem(nextIdx, 6, item_time)
+
 
     def sale_create_item(self, name, category, cnt, sale_price, tax, margin_price, time):
         item_name = QTableWidgetItem()

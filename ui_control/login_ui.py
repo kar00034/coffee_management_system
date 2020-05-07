@@ -1,9 +1,9 @@
 from PyQt5 import uic
 from PyQt5.QtWidgets import QWidget, QMessageBox, QLineEdit
 
-from ui_control.findpass import Find
 from dao.id_dao import IDDao
 from ui_control.User_registration import Sign_up
+from ui_control.findpass import Find
 from ui_control.main_menu import Main
 
 
@@ -47,9 +47,9 @@ class Login(QWidget):
                     self.ui.close()
                     self.main = Main()
                     self.main.ui.btn_out.clicked.connect(self.ui.show)
-                    self.main.ui.lbl_ID.setText(self.idt.select_item(id)[0][0])
-                    self.main.ui.lbl_mode.setText(self.idt.select_item(id)[0][1])
-                    self.check_grant()
+                    self.main.ui.lbl_ID.setText(self.idt.select_item(name)[0][2])
+                    self.main.ui.lbl_mode.setText(self.idt.select_item(name)[0][1])
+                    self.check_grant(mode)
                     self.clear()
 
                     return
@@ -69,12 +69,11 @@ class Login(QWidget):
         self.ui.le_pass.clear()
         self.ui.le_id.clear()
 
-    def check_grant(self):
+    def check_grant(self,mode):
         grant = []
         for i in range(len(IDDao().select_grant('admin'))):
-            a = IDDao().select_grant(self.main.ui.lbl_ID.text()).count(IDDao().select_grant('admin')[i])
+            a = IDDao().select_grant(mode).count(IDDao().select_grant('admin')[i])
             grant.append(a)
-
         if grant[1] == 0:
             self.main.ui.btn_sale.hide()
         if grant[2] == 0:

@@ -13,9 +13,10 @@ select_sql2 = "select distinct(DATE_FORMAT(date,'%Y')) from sale s left join pro
 select_sql2_where = select_sql2 + " where DATE_FORMAT(date,'%Y') = %s"
 select_sql3 = "select distinct(DATE_FORMAT(date,'%m')) from sale s left join product p on s.code = p.code left join sale_detail sd on s.no = sd.no where DATE_FORMAT(date,'%Y') = %s"
 
+
 class SaleDao(Dao):
 
-    def insert_item(self, name=None,salecnt=None,):
+    def insert_item(self, name=None, salecnt=None, ):
         args = (name, salecnt,)
         try:
             super().do_query(query=insert_sql, kwargs=args)
@@ -70,18 +71,17 @@ class SaleDao(Dao):
             for row in rows:
                 yield row
 
-
-    def select_date(self, date=None,y=0):
+    def select_date(self, date=None, y=0):
         try:
             conn = self.connection_Pool.get_connection()
             cursor = conn.cursor()
-            if y==0:    #   연도 별 데이터 찾기
+            if y == 0:  # 연도 별 데이터 찾기
                 cursor.execute(select_sql_where_year, (date,))
-            elif y==1:  #   연도 중복 제거
+            elif y == 1:  # 연도 중복 제거
                 cursor.execute(select_sql2_where, (date,))
-            elif y==2:  #   연도 별 월 찾기
+            elif y == 2:  # 연도 별 월 찾기
                 cursor.execute(select_sql3, (date,))
-            elif y==3:  #   월 별 데이터 찾기
+            elif y == 3:  # 월 별 데이터 찾기
                 cursor.execute(select_sql_where_month, (date,))
             res = []
             [res.append(row) for row in self.iter_row(cursor, 5)]
@@ -109,7 +109,7 @@ class SaleDao(Dao):
             cursor.close()
             conn.close()
 
-    def select_graph(self,all=True):
+    def select_graph(self, all=True):
         graph_sql_year_t = "select DISTINCT(DATE_FORMAT(date, '%m')) from sale s"
         graph_sql_year_count = "select count(DISTINCT(DATE_FORMAT(date, '%m'))) from sale s"
         try:
@@ -125,13 +125,14 @@ class SaleDao(Dao):
             cursor.close()
             conn.close()
 
-    def select_graph_where(self,data=None,count=False):
+    def select_graph_where(self, data=None, count=False):
         graph_sql_month_t = "select DISTINCT(DATE_FORMAT(date, '%m')) from sale s where date_format(date, '%Y') = %s"
         graph_sql_month_count = "select count(DISTINCT(DATE_FORMAT(date, '%m'))) from sale s where date_format(date, '%Y') = %s"
         try:
             conn = self.connection_Pool.get_connection()
             cursor = conn.cursor()
-            cursor.execute(graph_sql_month_t, (data,)) if count is False else cursor.execute(graph_sql_month_count,(data,))
+            cursor.execute(graph_sql_month_t, (data,)) if count is False else cursor.execute(graph_sql_month_count,
+                                                                                             (data,))
             res = []
             [res.append(row) for row in self.iter_row(cursor, 12)]
             return res
@@ -141,21 +142,38 @@ class SaleDao(Dao):
             cursor.close()
             conn.close()
 
-    def select_graph_product(self,data=None):
+    def select_graph_product_name(self):
         # p.name에 대해 {%m:salecnt} 의 값을 가지는 딕셔너리 month 와 그 키들을 리스트로 가진 res
-        sel_mon_product = "select name, sum(salecnt),DATE_FORMAT(date,'%Y.%m') from product p left join sale s on p.code = s.code where name = %s group by DATE_FORMAT(date,'%Y.%m')"
+        sel_mon_product = "select DISTINCT(name) from product p left join sale s on p.code = s.code"
         try:
             res = []
-            month={}
+            conn = self.connection_Pool.get_connection()
+            cursor = conn.cursor()
+            cursor.execute(sel_mon_product)
+            # [res[row[0]]=[row[1]] for row in self.iter_row(cursor, 12)]
+            for row in self.iter_row(cursor, 5):
+                res.append(str(row).strip("',)("))
+            return res
+        except Error as err:
+            print(err)
+        finally:
+            cursor.close()
+            conn.close()
+
+    def select_graph_product(self):
+        # p.name에 대해 {%m:salecnt} 의 값을 가지는 딕셔너리 month 와 그 키들을 리스트로 가진 res
+        sel_mon_product = "select p.name, sum(sale_price) from sale_detail sd left join sale s on sd.no = s.no left join product p on s.code = p.code GROUP by name"
+        try:
+            name = []
+            price = []
 
             conn = self.connection_Pool.get_connection()
             cursor = conn.cursor()
-            cursor.execute(sel_mon_product, (data,))
-            # [res[row[0]]=[row[1]] for row in self.iter_row(cursor, 12)]
-            for row in self.iter_row(cursor,12):
-                res.append(row[2])
-                month[row[2]]=row[1]
-            return res, month
+            cursor.execute(sel_mon_product)
+            for row in self.iter_row(cursor, 12):
+                name.append(row[0])
+                price.append(row[1])
+            return name, price
         except Error as err:
             print(err)
         finally:
