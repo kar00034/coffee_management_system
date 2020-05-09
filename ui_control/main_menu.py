@@ -66,10 +66,6 @@ class Main(QtWidgets.QMainWindow):
             grant.append(a)
         if grant[2] == 0:
             self.sale.ui.tab_product.removeTab(0)
-            self.sale.ui.btn_insert.setEnabled(False)
-            self.sale.ui.btn_delete.setEnabled(False)
-            self.sale.ui.btn_ok.setEnabled(False)
-            self.sale.ui.btn_reset.setEnabled(False)
 
     def logout(self):
         self.ui.close()

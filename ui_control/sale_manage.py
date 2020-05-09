@@ -287,13 +287,15 @@ class SaleMenu(QWidget):
         self.load_pro_all()
 
     def load_order(self):
-        if self.ui.tab_product.currentIndex() == 0:
+        index = self.ui.tab_product.currentIndex()
+        if self.ui.tab_product.tabText(index) == '제품 관리 (&1)':
             self.ui.table_sale.setColumnCount(5)
             self.table_sale = create_table(table=self.ui.table_sale, data=['제품코드', '제품명', '종류', '제품가격', '마진율(%)'])
             self.load_pro_all()
             self.ui.table_order.hide()
             self.ui.lb_order.hide()
-        elif self.ui.tab_product.currentIndex() == 1:
+
+        elif self.ui.tab_product.tabText(index) == '판매 관리 (&2)':
             self.ui.table_sale.setColumnCount(7)
             self.table_sale_detail = create_table(table=self.ui.table_sale, data=['제품명', '종류', '판매량', '판매액', '세금', '마진액', '판매 시간'])
             self.ui.table_order.setColumnCount(3)
@@ -302,8 +304,7 @@ class SaleMenu(QWidget):
             self.ui.lb_order.show()
             self.load_sale()
 
-
-        elif self.ui.tab_product.currentIndex() == 2:
+        elif self.ui.tab_product.tabText(index) == '검색 (&3)':
             self.ui.table_sale.setColumnCount(4)
             self.table_select = create_table(table=self.ui.table_sale, data=['제품명', '판매량', '판매가', '판매시간'])
             self.ui.table_order.hide()
