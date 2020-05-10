@@ -230,7 +230,7 @@ class Main(QtWidgets.QMainWindow):
         mpl.rcParams['font.family'] = 'NanumGothic'
         mpl.rcParams['axes.unicode_minus'] = False
         # data
-        name, price = self.sdt.select_graph_product()
+        name, price = self.sdt.select_graph()
         fig, ax1 = plt.subplots()
 
         # plot

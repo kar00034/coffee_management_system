@@ -109,58 +109,7 @@ class SaleDao(Dao):
             cursor.close()
             conn.close()
 
-    def select_graph(self, all=True):
-        graph_sql_year_t = "select DISTINCT(DATE_FORMAT(date, '%m')) from sale s"
-        graph_sql_year_count = "select count(DISTINCT(DATE_FORMAT(date, '%m'))) from sale s"
-        try:
-            conn = self.connection_Pool.get_connection()
-            cursor = conn.cursor()
-            cursor.execute(graph_sql_year_t) if all is True else cursor.execute(graph_sql_year_count)
-            res = []
-            [res.append(row) for row in self.iter_row(cursor, 12)]
-            return res
-        except Error as err:
-            print(err)
-        finally:
-            cursor.close()
-            conn.close()
-
-    def select_graph_where(self, data=None, count=False):
-        graph_sql_month_t = "select DISTINCT(DATE_FORMAT(date, '%m')) from sale s where date_format(date, '%Y') = %s"
-        graph_sql_month_count = "select count(DISTINCT(DATE_FORMAT(date, '%m'))) from sale s where date_format(date, '%Y') = %s"
-        try:
-            conn = self.connection_Pool.get_connection()
-            cursor = conn.cursor()
-            cursor.execute(graph_sql_month_t, (data,)) if count is False else cursor.execute(graph_sql_month_count,
-                                                                                             (data,))
-            res = []
-            [res.append(row) for row in self.iter_row(cursor, 12)]
-            return res
-        except Error as err:
-            print(err)
-        finally:
-            cursor.close()
-            conn.close()
-
-    def select_graph_product_name(self):
-        # p.name에 대해 {%m:salecnt} 의 값을 가지는 딕셔너리 month 와 그 키들을 리스트로 가진 res
-        sel_mon_product = "select DISTINCT(name) from product p left join sale s on p.code = s.code"
-        try:
-            res = []
-            conn = self.connection_Pool.get_connection()
-            cursor = conn.cursor()
-            cursor.execute(sel_mon_product)
-            # [res[row[0]]=[row[1]] for row in self.iter_row(cursor, 12)]
-            for row in self.iter_row(cursor, 5):
-                res.append(str(row).strip("',)("))
-            return res
-        except Error as err:
-            print(err)
-        finally:
-            cursor.close()
-            conn.close()
-
-    def select_graph_product(self):
+    def select_graph(self):
         # p.name에 대해 {%m:salecnt} 의 값을 가지는 딕셔너리 month 와 그 키들을 리스트로 가진 res
         sel_mon_product = "select p.name, sum(sale_price) from sale_detail sd left join sale s on sd.no = s.no left join product p on s.code = p.code GROUP by name"
         try:
@@ -179,5 +128,3 @@ class SaleDao(Dao):
         finally:
             cursor.close()
             conn.close()
-
-# sel_mon_product = "select name, if(sum(salecnt) is NULL,0,sum(salecnt)) from product p left join sale s on p.code = s.code where salecnt is not null and DATE_FORMAT(date,'%m') = 2 and p.name = '팥빙수' group by name"
